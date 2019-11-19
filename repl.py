@@ -1,5 +1,7 @@
 import cmd
 import sys
+import pickle
+import struct
 from dataclasses import dataclass
 
 
@@ -10,7 +12,9 @@ class TableRowDef:
     email: str
 
 class InmemTable:
+    # __row_struct = struct.pack('l')
     __row_def = TableRowDef
+    __filename = 'table.psl'
 
     def __init__(self):
         self.__rows = []
@@ -25,6 +29,17 @@ class InmemTable:
     def clear_table(self):
         self.__rows = []
 
+    def save(self):
+        with open(self.__filename, 'wb') as fp:
+            pickle.dump(self.__rows, fp, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load(self):
+        try:
+            with open(self.__filename, 'rb') as fp:
+                self.__rows = pickle.load(fp)
+        except FileNotFoundError:
+            self.__rows = []
+
 class REPL(cmd.Cmd):
     metacommands = ("exit",)
     select_statement = "select"
@@ -33,6 +48,12 @@ class REPL(cmd.Cmd):
     intro = "Welcome to the pysql shell. Type help or ? to list commands.\n"
     prompt = "(pysql) "
     table = InmemTable()
+
+    def preloop(self):
+        self.table.load()
+
+    def postloop(self):
+        self.table.save()
 
     def do_exit(self, arg):
         "Exits the REPL"
