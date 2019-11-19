@@ -2,7 +2,7 @@ import pexpect
 from repl import TableRowDef
 import pytest
 
-REPL_PROMPT = "\(pysql\) "
+REPL_PROMPT = "\\(pysql\\) "
 
 
 @pytest.fixture(autouse=True)
@@ -10,7 +10,7 @@ def child():
     child_p = pexpect.spawn(".venv/bin/python repl.py", timeout=5)
     child_p.expect(REPL_PROMPT)
     yield child_p
-    child_p.kill(-9)
+    child_p.kill(9)
 
 
 def test_insert(child):
