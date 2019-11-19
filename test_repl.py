@@ -17,11 +17,18 @@ def test_insert(child):
     insert_line = "insert 1 aaa bbb"
     # import ipdb; ipdb.set_trace()
     child.sendline(insert_line)
-    # child.expect("Executing insert statement " + insert_line)
+    child.expect("Executing insert statement " + insert_line)
     child.expect(REPL_PROMPT)
     select_line = "select"
     child.sendline(select_line)
+    child.expect("Executing select statement " + select_line)
+    expected_row = repr(TableRowDef(1, "aaa", "bbb")).replace('(', '\\(').replace(')', '\\)')
+    child.expect(expected_row)
     child.expect(REPL_PROMPT)
-    # expected_row = repr(TableRowDef(1, "aaa", "bbb"))
-    # child.expect("Executing select statement " + select_line)
-    # child.expect(expected_row)
+
+
+def test_select(child):
+    select_line = "select"
+    child.sendline(select_line)
+    child.expect("Executing select statement " + select_line)
+    child.expect(REPL_PROMPT)
