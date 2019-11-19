@@ -1,0 +1,6 @@
+-c requirements.txt
+ipdb
+ipython
+black
+pytest
+pexpect
