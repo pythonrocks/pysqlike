@@ -26,7 +26,7 @@ class InmemTable:
         self.__rows = []
 
 class REPL(cmd.Cmd):
-    metacommands = ("exit",)
+    metacommands = ("exit", "help")
     select_statement = "select"
     insert_statement = "insert"
     meta_prefix = "."
@@ -38,17 +38,32 @@ class REPL(cmd.Cmd):
         "Exits the REPL"
         raise sys.exit(0)
 
+    def do_help(self, arg):
+        "Print help"
+        print('This is help')
+
+
     def onecmd(self, line):
-        if line.startswith(self.meta_prefix):
-            if line[1:] in self.metacommands:
-                line = line[1:]
-                return True
-            else:
-                print(f"Command not recognized {line}")
-                return False
+        cmd, arg, line = self.parseline(line)
+        if not line:
+            return self.emptyline()
+        if cmd is None:
+            return self.default(line)
+        if line == 'EOF' :
+            self.lastcmd = ''
+        if line == '':
+            return self.default(line)
         else:
-            self.parse_statement(line)
-        return False
+            if line.startswith(self.meta_prefix):
+                if line[1:] in self.metacommands:
+                    line = line[1:]
+                try:
+                    func = getattr(self, 'do_' + line)
+                except AttributeError:
+                    return self.default(line)
+                return func(arg)
+            else:
+                self.parse_statement(line)
 
     def precmd(self, line):
         return line.lower().strip()
