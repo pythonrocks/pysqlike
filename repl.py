@@ -5,6 +5,45 @@ import struct
 from dataclasses import dataclass
 
 
+class Cursor:
+
+    def __init__(self, table):
+        self.table = table
+        self.row_num = 0
+        self.last_row = self.is_last_row()
+
+    def table_start(self):
+        self.row_num = 0
+        self.last_row = self.is_last_row()
+
+    def table_end(self):
+        self.row_num = table.num_rows - 1 if table.num_rows else 0
+        self.last_row = True
+
+    def is_last_row(self):
+        return self.row_num == (self.table.num_rows - 1)
+
+    def advance_row(self):
+        self.row_num += 1
+        self.last_row = self.is_last_row()
+
+    def cursor_value(self):
+        return self.table[self.row_num]
+
+    # def __getitem__(self):
+    #     return self.table[self.row_num]
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.row_num >= self.table.num_rows:
+            raise StopIteration
+        row = self.cursor_value()
+        self.advance_row()
+        return row
+
+
 @dataclass
 class TableRowDef:
     id: int
@@ -12,18 +51,28 @@ class TableRowDef:
     email: str
 
 class InmemTable:
-    # __row_struct = struct.pack('l')
+    # __row_struct = struct.pack('lss')
     __row_def = TableRowDef
     __filename = 'table.psl'
 
+    def get_cursor(self):
+        return Cursor(self)
+
     def __init__(self):
         self.__rows = []
+
+    def __getitem__(self, index):
+        return self.__rows[index]
+
+    @property
+    def num_rows(self):
+        return len(self.__rows)
 
     def insert(self, insert_args: tuple):
         self.__rows.append(self.__row_def(*insert_args))
 
     def select(self):
-        for row in self.__rows:
+        for row in self.get_cursor():
             print(row)
 
     def clear_table(self):
